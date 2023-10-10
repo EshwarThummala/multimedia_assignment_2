@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+
+{% block styles %}
+{{super()}}
+{% endblock %}
+
+{% block head %}
+{% endblock %}
+
+{% block body %}
+<!-- Form to get the image id, K and the vector space from user -->
+<h1>Image Search in Different Vector Spaces</h1>
+<form  class="input-group" method="post" action="{{ url_for('index') }}">
+    <input class="form-control input-sm" type="text" name="image_id" id="image_id" placeholder="Image Id" enctype="multipart/form-data"/>
+    <span class="input-group-addon"><h1>-</h1></span>
+    <input class="form-control" type="number" name="k" id="k" placeholder="K value"/>
+    <span class="input-group-addon"><h1>-</h1></span>
+    <select class="form-control" name="vectorspace" id="vectorspace" placeholder="Vector Space">
+        <option value="color">Color</option>
+        <option value="hog">HOG</option>
+        <option value="layer3">Resnet Layer3</option>
+        <option value="avgpool">Resnet Avgpool</option>
+        <option value="fc">Resnet FC</option>
+    </select><h1>-</h1></span>
+    <select class="form-control" name="latentspace" id="latentspace" placeholder="Latent Semantics">
+        <option value="none">None</option>
+        <option value="svd">SVD</option>
+        <option value="nmf">NNMF</option>
+        <option value="lda">LDA</option>
+        <option value="kmeans">K-Means</option>
+    </select>
+    <span class="input-group-addon"><h1>-</h1></span>
+    <!--<select name="dist_sim" id="dist_sim" class="form-control" placeholder="K value">
+        <option value="linear">Linear</option>
+        <option value="euc">Euc</option>
+        <option value="cbrt">Cube Root</option>
+        <option value="cosine">cosine</option>
+    </select><br>-->
+    <input type="submit" value="Get K Matches" class="btn btn-primary btn-lg"/>
+</form>
+<br>
+<!-- Displaying results based on the value of the result -->
+{% if result %}
+<!-- Displaying error message if image not found -->
+    {% if 'image_not_found' in result.keys() %}
+        <h1>The provided image id is not found in dataset</h1>
+    {% else %}
+    <!-- Displaying respective error message if -->
+        {% if 'error' in result.keys() %}
+            <h3>Provided image</h3>
+            <img src="{{ result['cur_image'] }}" alt="Some text" style='border:2px solid #030303;border-radius:5px' width="200" height="180" />
+            <h1>Given image is gray scale and it only has one channel</h1>
+        {% else %}
+            <div class="container">
+                <div class="inline-div">
+                    <h3>Image</h3>
+                    <img src="{{ result['cur_image'] }}" alt="Some text" style='border:2px solid #030303;border-radius:5px' width="200" height="180" />
+                 </div>
+            <!--     <div class="float-child2">
+                <h3>Current Descriptor</h3>
+                    <div class="scrollable-container">
+                        {% for ele in result['cur_desc'] %}
+                            <p>{{ ele }}</p>
+                        {% endfor %}
+                    </div>
+                </div> -->
+            </div>
+            <!-- Displaying all the images given by the app.py file-->
+            <h1 style="text-align: center;"> Matches </h1>
+            <div class="container">
+                {% for key,image_path in result.items() %}
+                    {% if key != 'cur_image' and 'score' not in key and key != 'cur_desc' %}
+                        <div class="inline-div">
+                            <img src="{{ image_path }}" alt="Some text"  style='border:2px solid #030303;border-radius:5px' width="200" height="180" />
+                            <h3>Distance: {{ result[key+'-score'] }}</h3>
+                        </div>
+                    {% endif %}
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endif %}
+{% endif %}
+{% endblock %}

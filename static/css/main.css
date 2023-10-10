@@ -1,0 +1,33 @@
+/*scrollable-container for the displaying the current descriptor*/
+.scrollable-container {
+    width: 400px;
+    height: 200px;
+    overflow: scroll;
+    border: 1px solid #ccc;
+    padding: 10px;
+}
+/*Placing images side by side*/
+.inline-div {
+    flex: 0 0 calc(5% - 20px); /* Adjust the width as needed */
+    margin: 10px;
+}
+.container {
+    display: flex;
+    flex-wrap: wrap;
+}
+/*Placing divs side by side*/
+/*.float-container {
+    border: 3px solid #fff;
+    padding: 20px;
+}
+
+.float-child1 {
+    width: 50%;
+    float: left;
+    padding-left: 300px;
+}
+.float-child2 {
+    width: 50%;
+    float: left;
+    padding-right: 40px;
+}*/
