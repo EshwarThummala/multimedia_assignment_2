@@ -31,3 +31,11 @@
     float: left;
     padding-right: 40px;
 }*/
+
+#showimages {
+    display: none; /* Initially hide the div */
+  }
+
+#showlabels {
+    display: none;
+}

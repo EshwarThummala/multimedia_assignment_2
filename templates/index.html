@@ -66,18 +66,43 @@
                 </div> -->
             </div>
             <!-- Displaying all the images given by the app.py file-->
-            <h1 style="text-align: center;"> Matches </h1>
             <div class="container">
-                {% for key,image_path in result.items() %}
-                    {% if key != 'cur_image' and 'score' not in key and key != 'cur_desc' %}
-                        <div class="inline-div">
-                            <img src="{{ image_path }}" alt="Some text"  style='border:2px solid #030303;border-radius:5px' width="200" height="180" />
-                            <h3>Distance: {{ result[key+'-score'] }}</h3>
-                        </div>
-                    {% endif %}
-                {% endfor %}
+                <button class="btn btn-primary" id="toggleImageMatches" ><h4>Show Images</h4></button>
+                <h1>-</h1>
+                <button class="btn btn-primary" id="toggleLabelMatches" ><h4>Show Labels</h4></button>
+            </div>
+            <div id="showimages">
+                <div class="container">
+                    {% for key,image_path in result.items() %}
+                        {% if key != 'cur_image' and 'score' not in key and key != 'cur_desc' and key != 'labels' %}
+                            <div class="inline-div">
+                                <img src="{{ image_path }}" alt="Some text"  style='border:2px solid #030303;border-radius:5px' width="200" height="180" />
+                                <h3>Distance: {{ result[key+'-score'] }}</h3>
+                            </div>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+            </div>
+            <div id="showlabels">
+                <div style="padding-left: 220px;">
+                    {% for label in result['labels'] %}
+                        <b>{{label[0]}} - {{label[1]}}</b><br>
+                    {% endfor %}
+                </div>
             </div>
         {% endif %}
     {% endif %}
 {% endif %}
+<script>
+    var images = document.getElementById("showimages");
+    var labels = document.getElementById("showlabels");
+    document.getElementById("toggleImageMatches").addEventListener("click", function() {
+        images.style.display = "block";
+        labels.style.display = "none";
+    });
+    document.getElementById("toggleLabelMatches").addEventListener("click", function() {
+        images.style.display = "none";
+        labels.style.display = "block";
+    });
+</script>
 {% endblock %}

@@ -43,7 +43,8 @@ def cosinek(cur_desc, check_desc):
 def get_descriptors(image_id, k, vectorspace, latentspace):
    mappings = dict()
    if(latentspace == 'none'):
-      if(vectorspace == 'color'):
+      return get_vectorspace_matches(image_id, k, vectorspace)
+      '''if(vectorspace == 'color'):
          return get_color_desc_matches(image_id, k)
       elif(vectorspace == 'hog'):
          return get_hog_desc_matches(image_id, k)
@@ -52,7 +53,7 @@ def get_descriptors(image_id, k, vectorspace, latentspace):
       elif(vectorspace == 'avgpool'):
          return get_avgpool_desc_matches(image_id, k)
       elif(vectorspace == 'fc'):
-         return get_fc_desc_matches(image_id, k)
+         return get_fc_desc_matches(image_id, k)'''
    else:
       return get_latentspace_matches(image_id, k, vectorspace, latentspace)
    return dict()
@@ -72,7 +73,7 @@ def top_k_labels(distances, k):
    return list(sorted(avg_labels.items(), key=lambda item: item[1]))[:k]
 
 # readle format of the descriptors for respective vector spaces
-def get_color_display_descriptor(descr):
+'''def get_color_display_descriptor(descr):
   res = []
   k = 0
   for color in ['Red_channel', 'Green_channel', 'Blue_channel']:
@@ -188,6 +189,8 @@ def get_avgpool_desc_matches(image_id, k):
         dist =  euc(cur_desc, check_desc)
         distances.append([dist, key])
     distances.sort(key = lambda x: x[0])
+    k_labels = top_k_labels(distances, k)
+    res_dict['labels'] = k_labels    
     for li in distances[:k]:
        res_dict[li[1]] = 'static/torchvision_images/'+li[1]+'.jpg'
        res_dict[li[1]+'-score'] = str(float("{:.4f}".format(li[0])))
@@ -212,10 +215,37 @@ def get_fc_desc_matches(image_id, k):
         dist =  euc(cur_desc, check_desc)
         distances.append([dist, key])
     distances.sort(key = lambda x: x[0])
+    k_labels = top_k_labels(distances, k)
+    res_dict['labels'] = k_labels
     for li in distances[:k]:
        res_dict[li[1]] = 'static/torchvision_images/'+li[1]+'.jpg'
        res_dict[li[1]+'-score'] = str(float("{:.4f}".format(li[0])))
     return res_dict
+'''
+def get_vectorspace_matches(image_id, k, vectorspace):
+   json_file = open('descriptors\\'+vectorspace+'_desc_a2.json', 'r')
+   loaded_model_json = json_file.read()
+   json_file.close()
+   dictk = json.loads(loaded_model_json)
+   if(image_id not in dictk.keys()):
+      fictk = dict()
+      fictk['error'] = 'Either the image is gray scale or the image is not present in the dataset please give a proper input'
+      return fictk
+   cur_desc = np.asarray(dictk[image_id]['feature-descriptor'])
+   res_dict = dict()
+   #res_dict['cur_desc'] = get_resnet_diaplsy_descriptor(cur_desc.tolist())
+   distances = []
+   for key in dictk.keys():
+      check_desc = np.asarray(dictk[key]['feature-descriptor'])
+      dist =  euc(cur_desc, check_desc)
+      distances.append([dist, key, dictk[key]['label']])
+   distances.sort(key = lambda x: x[0])
+   k_labels = top_k_labels(distances, k)
+   res_dict['labels'] = k_labels
+   for li in distances[:k]:
+      res_dict[li[1]] = 'static/torchvision_images/'+li[1]+'.jpg'
+      res_dict[li[1]+'-score'] = str(float("{:.4f}".format(li[0])))
+   return res_dict   
 
 def get_latentspace_matches(image_id, k, vectorspace,latentspace):
    json_file = open('descriptors\\task_3\\'+latentspace+'\\'+vectorspace+'_'+latentspace+'.json', 'r')
@@ -236,7 +266,7 @@ def get_latentspace_matches(image_id, k, vectorspace,latentspace):
       distances.append([dist, key, dictk[key]['label']])
    distances.sort(key = lambda x: x[0])
    k_labels = top_k_labels(distances, k)
-   print(k_labels)
+   res_dict['labels'] = k_labels
    for li in distances[:k]:
       res_dict[li[1]] = 'static/torchvision_images/'+li[1]+'.jpg'
       res_dict[li[1]+'-score'] = str(float("{:.4f}".format(li[0])))
