@@ -4,6 +4,8 @@ import numpy as np
 from scipy import spatial
 import cv2
 from flask_bootstrap import Bootstrap
+import util
+
 # Create a Flask web application instance.
 app = Flask(__name__)
 Bootstrap(app)
@@ -56,7 +58,6 @@ def get_descriptors(image_id, k, vectorspace, latentspace):
          return get_fc_desc_matches(image_id, k)'''
    else:
       return get_latentspace_matches(image_id, k, vectorspace, latentspace)
-   return dict()
 
 def top_k_labels(distances, k):
    avg_labels = dict()
@@ -248,10 +249,13 @@ def get_vectorspace_matches(image_id, k, vectorspace):
    return res_dict   
 
 def get_latentspace_matches(image_id, k, vectorspace,latentspace):
-   json_file = open('descriptors\\task_3\\'+latentspace+'\\'+vectorspace+'_'+latentspace+'.json', 'r')
-   loaded_model_json = json_file.read()
-   json_file.close()
-   dictk = json.loads(loaded_model_json)
+   if(latentspace in ['cpd']):
+      json_file = open('descriptors\\latent_descriptors\\'+latentspace+'\\'+vectorspace+'_'+latentspace+'.json', 'r')
+      loaded_model_json = json_file.read()
+      json_file.close()
+      dictk = json.loads(loaded_model_json)
+   else:
+      dictk = util.get_latent_semantics(k, vectorspace, latentspace)
    if(image_id not in dictk.keys()):
       fictk = dict()
       fictk['error'] = 'Either the image is gray scale or the image is not present in the dataset please give a proper input'
