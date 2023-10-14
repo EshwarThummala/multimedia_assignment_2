@@ -2,9 +2,10 @@ from flask import Flask, render_template, url_for,request,redirect
 import json
 import numpy as np
 from scipy import spatial
-import cv2
+import image_process
 from flask_bootstrap import Bootstrap
 import util
+import os
 
 # Create a Flask web application instance.
 app = Flask(__name__)
@@ -17,7 +18,13 @@ def index():
     if(request.method == 'POST'):
       dictk = dict()
       # Check if the provided image_id is within a valid range.
-      if(-1 < int(request.form['image_id']) < 8677):
+      if(request.form['input_type'] == 'image_file'):
+         uploaded_image = request.files['image_id']
+         image_path = os.path.join('static/uploaded_images',uploaded_image.filename)
+         uploaded_image.save(image_path)
+         dictk = image_process.get_newimage_matches(image_path, request.form['vectorspace'], request.form['latentspace'],int(request.form['k']))
+         dictk['cur_image'] = image_path
+      elif(-1 < int(request.form['image_id']) < 8677):
          dictk = get_descriptors(request.form['image_id'], int(request.form['k']), request.form['vectorspace'], request.form['latentspace'])
          # Add the current image's path to the result dictionary.
          dictk['cur_image'] = 'static/torchvision_images/'+request.form['image_id']+'.jpg'
@@ -223,20 +230,25 @@ def get_fc_desc_matches(image_id, k):
        res_dict[li[1]+'-score'] = str(float("{:.4f}".format(li[0])))
     return res_dict
 '''
-def get_vectorspace_matches(image_id, k, vectorspace):
+def get_vectorspace_matches(image_id, k, vectorspace, newImage=False):
    json_file = open('descriptors\\'+vectorspace+'_desc_a2.json', 'r')
    loaded_model_json = json_file.read()
    json_file.close()
    dictk = json.loads(loaded_model_json)
-   if(image_id not in dictk.keys()):
-      fictk = dict()
-      fictk['error'] = 'Either the image is gray scale or the image is not present in the dataset please give a proper input'
-      return fictk
-   cur_desc = np.asarray(dictk[image_id]['feature-descriptor'])
+   cur_desc = []
+   if(newImage):
+      cur_desc = np.asarray(image_id)
+   else:
+      if(image_id not in dictk.keys()):
+         fictk = dict()
+         fictk['error'] = 'Either the image is gray scale or the image is not present in the dataset please give a proper input'
+         return fictk
+      cur_desc = np.asarray(dictk[image_id]['feature-descriptor'])
    res_dict = dict()
    #res_dict['cur_desc'] = get_resnet_diaplsy_descriptor(cur_desc.tolist())
    distances = []
    for key in dictk.keys():
+      print(key)
       check_desc = np.asarray(dictk[key]['feature-descriptor'])
       dist =  euc(cur_desc, check_desc)
       distances.append([dist, key, dictk[key]['label']])
@@ -248,7 +260,7 @@ def get_vectorspace_matches(image_id, k, vectorspace):
       res_dict[li[1]+'-score'] = str(float("{:.4f}".format(li[0])))
    return res_dict   
 
-def get_latentspace_matches(image_id, k, vectorspace,latentspace):
+def get_latentspace_matches(image_id, k, vectorspace,latentspace, newImage=False):
    if(latentspace in ['cpd']):
       json_file = open('descriptors\\latent_descriptors\\'+latentspace+'\\'+vectorspace+'_'+latentspace+'.json', 'r')
       loaded_model_json = json_file.read()
@@ -256,11 +268,14 @@ def get_latentspace_matches(image_id, k, vectorspace,latentspace):
       dictk = json.loads(loaded_model_json)
    else:
       dictk = util.get_latent_semantics(k, vectorspace, latentspace)
-   if(image_id not in dictk.keys()):
-      fictk = dict()
-      fictk['error'] = 'Either the image is gray scale or the image is not present in the dataset please give a proper input'
-      return fictk
-   cur_desc = np.asarray(dictk[image_id]['feature-descriptor'])
+   if(newImage):
+      cur_desc = np.asarray(image_id)
+   else:
+      if(image_id not in dictk.keys()):
+         fictk = dict()
+         fictk['error'] = 'Either the image is gray scale or the image is not present in the dataset please give a proper input'
+         return fictk
+      cur_desc = np.asarray(dictk[image_id]['feature-descriptor'])
    res_dict = dict()
    #res_dict['cur_desc'] = get_resnet_diaplsy_descriptor(cur_desc.tolist())
    distances = []

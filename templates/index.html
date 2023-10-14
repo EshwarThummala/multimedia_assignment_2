@@ -10,8 +10,14 @@
 {% block body %}
 <!-- Form to get the image id, K and the vector space from user -->
 <h1>Image Search in Different Vector Spaces</h1>
-<form  class="input-group" method="post" action="{{ url_for('index') }}">
-    <input class="form-control input-sm" type="text" name="image_id" id="image_id" placeholder="Image Id" enctype="multipart/form-data"/>
+<form  class="input-group" method="post" action="{{ url_for('index') }}" enctype="multipart/form-data">
+    <select class="form-control" name="input_type" id="input_type">
+        <option value="image_id">Image Id</option>
+        <option value="label">Label </option>
+        <option value="image_file">Image File</option>
+    </select>
+    <span class="input-group-addon"><h1>-</h1></span>
+    <input class="form-control input-sm" type="text" name="image_id" id="image_id" placeholder="Image Id"/>
     <span class="input-group-addon"><h1>-</h1></span>
     <input class="form-control" type="number" name="k" id="k" placeholder="K value"/>
     <span class="input-group-addon"><h1>-</h1></span>
@@ -95,6 +101,15 @@
     {% endif %}
 {% endif %}
 <script>
+    const inputTypeSelect = document.getElementById("input_type");
+    const fileInput = document.getElementById("image_id");
+    inputTypeSelect.addEventListener("change", function() {
+        if (inputTypeSelect.value === "image_file") {
+            fileInput.type = "file";
+        } else {
+            fileInput.type = "text";
+        }
+    });
     var images = document.getElementById("showimages");
     var labels = document.getElementById("showlabels");
     document.getElementById("toggleImageMatches").addEventListener("click", function() {
