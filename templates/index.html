@@ -13,12 +13,12 @@
 <form  class="input-group" method="post" action="{{ url_for('index') }}" enctype="multipart/form-data">
     <select class="form-control" name="input_type" id="input_type">
         <option value="image_id">Image Id</option>
-        <option value="label">Label </option>
+        <option value="label" >Label </option>
         <option value="image_file">Image File</option>
         <option value = "label_label"> Label similarity matrix </option>
     </select>
     <span class="input-group-addon"><h1>-</h1></span>
-    <input class="form-control input-sm" type="text" name="image_id" id="image_id" placeholder="Image Id"/>
+    <input class="form-control input-sm" type="text" name="image_id" id="image_id" placeholder="Image Id / Label"/>
     <span class="input-group-addon"><h1>-</h1></span>
     <input class="form-control" type="number" name="k" id="k" placeholder="K value"/>
     <span class="input-group-addon"><h1>-</h1></span>
@@ -53,10 +53,28 @@
     {% if 'input_type' in result.keys()%}
         
         {% if 'error' in result.keys() %}
-            <h1>Invalid label</h1>
+            <h1>Invalid Label Input</h1>
+            
         {% else %}
-        <h1> Similar Labels:</h1>
-        <div id="show_labels">
+        <h1> Current Label: {{ result['curr_label']}}</h1>
+        <div class="container">
+            <button class="btn btn-primary" id="toggleImageMatches" ><h4>Show Images</h4></button>
+            <h1>-</h1>
+            <button class="btn btn-primary" id="toggleLabelMatches" ><h4>Show Labels</h4></button>
+        </div>
+        <div id="showimages">
+            <div class="container">
+                {% for key,image_path in result.items() %}
+                    {% if key != 'curr_label' and 'score' not in key and key != 'cur_desc' and key != 'labels' and key != 'input_type'%}
+                        <div class="inline-div">
+                            <img src="{{ image_path }}" alt="Some text"  style='border:2px solid #030303;border-radius:5px' width="200" height="180" />
+                            <h3>Distance: {{ result[key+'-score'] }}</h3>
+                        </div>
+                    {% endif %}
+                {% endfor %}
+            </div>
+        </div>
+        <div id="showlabels">
             <div style="padding-left: 220px;">
                 {% for label in result['labels'] %}
                     <b>{{label[0]}} - {{label[1]}}</b><br>

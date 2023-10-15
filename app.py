@@ -333,6 +333,7 @@ def get_labels(label, k ,vectorspace ,latentspace):
       for key in model:
          model[key] = model[key] / label_count[key]
       print(model)
+
       curr_label = np.asarray(model[predefined_labels[int(label)]])
 
       distances = []
@@ -346,6 +347,21 @@ def get_labels(label, k ,vectorspace ,latentspace):
       print(distances)
       res_dict['labels'] = distances[:k]
       res_dict['input_type'] = 'label'
+
+      #Image distance
+      distance_image = []
+      for key in dictk.keys():
+         check_desc = np.asarray(dictk[key]['feature-descriptor'])
+         dist =  euc(curr_label, check_desc)
+         distance_image.append([dist, key])
+
+      distance_image.sort(key = lambda x: x[1])
+
+      for li in distance_image[:k]:
+         res_dict[li[1]] = 'static/torchvision_images/'+li[1]+'.jpg'
+         res_dict[li[1]+'-score'] = str(float("{:.4f}".format(li[0])))
+
+      res_dict['curr_label'] = predefined_labels[int(label)]
 
       return res_dict
 
