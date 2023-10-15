@@ -308,6 +308,8 @@ def get_latentspace_matches(image_id, k, vectorspace,latentspace, newImage=False
    return res_dict
 
 def get_labels(label, k ,vectorspace ,latentspace):
+   if(latentspace == 'none'):
+      return get_vectorspace_labels_matches(label, k, vectorspace)
    if(latentspace in ['cpd']):
       json_file = open('descriptors/latent_descriptors/'+latentspace+'/'+vectorspace+'_'+latentspace+'.json', 'r')
       loaded_model_json = json_file.read()
@@ -362,7 +364,7 @@ def get_labels(label, k ,vectorspace ,latentspace):
          dist =  euc(curr_label, check_desc)
          distance_image.append([dist, key])
 
-      distance_image.sort(key = lambda x: x[1])
+      distance_image.sort(key = lambda x: x[0])
 
       for li in distance_image[:k]:
          res_dict[li[1]] = 'static/torchvision_images/'+li[1]+'.jpg'
@@ -417,6 +419,57 @@ def get_label_label_matches(label, k ,vectorspace ,latentspace):
       res_dict['labels'] = distances[:k]
       res_dict['input_type'] = 'label_label'
       return res_dict
+   
+def get_vectorspace_labels_matches(label, k, vectorspace):
+   print(label)
+   if not label.isnumeric() or int(label) > 100:
+      print('label not present')
+      fictk = dict()
+      fictk['input_type'] = 'label'
+      fictk['error'] = 'Given label is not present in the dataset please give a proper input'
+      return fictk
+   else:
+      json_file = open('descriptors/'+vectorspace+'_desc_a2.json', 'r')
+      loaded_model_json = json_file.read()
+      json_file.close()
+      dictk = json.loads(loaded_model_json)
+      
+      model = {}
+      label_count = {}
+      for key in dictk:
+         if dictk[key]['label'] not in model:
+            model[dictk[key]['label']] = dictk[key]['feature-descriptor']
+            label_count[dictk[key]['label']] = 1
+         else:
+            x = model[dictk[key]['label']]
+            y = dictk[key]['feature-descriptor']
+            label_count[dictk[key]['label']] += 1
+            model[dictk[key]['label']] = (np.asarray(x) +np.asarray(y))
+      for key in model:
+         model[key] = model[key] / label_count[key]
+      #print(model)
+      predefined_labels = list(sorted(model.keys()))
+      curr_label = np.asarray(model[predefined_labels[int(label)]])
+
+      distance_image = []
+      for key in dictk.keys():
+         check_desc = np.asarray(dictk[key]['feature-descriptor'])
+         dist =  euc(curr_label, check_desc)
+         distance_image.append([dist, key])
+
+      distance_image.sort(key = lambda x: x[0])
+      res_dict = {}
+      for li in distance_image[:k]:
+         res_dict[li[1]] = 'static/torchvision_images/'+li[1]+'.jpg'
+         res_dict[li[1]+'-score'] = str(float("{:.4f}".format(li[0])))
+
+      res_dict['curr_label'] = predefined_labels[int(label)]
+      res_dict['input_type'] = 'label'
+
+      return res_dict
+
+
+      
 
 if __name__ == "__main__":
     app.run(debug=True)
