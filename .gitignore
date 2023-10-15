@@ -1,0 +1,4 @@
+descriptors
+static/torchvision_images
+__pycache__/
+static/uploaded_images

@@ -26,8 +26,9 @@ def index():
          dictk['cur_image'] = image_path
       elif (request.form['input_type'] == "label_label"):
          dictk = get_label_label_matches(request.form['image_id'], int(request.form['k']), request.form['vectorspace'] ,request.form['latentspace'])
-         result = json.loads(json.dumps(dictk))
-         return render_template('index.html', result = result)
+      elif(request.form['input_type'] == "image_image"):
+         dictk = get_descriptors(request.form['image_id'], int(request.form['k']), request.form['vectorspace'] ,request.form['latentspace'], useSimilarity=True)
+         dictk['cur_image'] = 'static/torchvision_images/'+request.form['image_id']+'.jpg'
       elif(request.form['input_type'] == 'label'):
          #check if provided label is valid or not
          dictk = get_labels(request.form['image_id'], int(request.form['k']), request.form['vectorspace'] ,request.form['latentspace'])
@@ -58,7 +59,7 @@ def cosinek(cur_desc, check_desc):
   return spatial.distance.cosine(cur_desc,  check_desc)
 
 # Abstaract image to get k images based on the vector space
-def get_descriptors(image_id, k, vectorspace, latentspace):
+def get_descriptors(image_id, k, vectorspace, latentspace, useSimilarity=False):
    mappings = dict()
    if(latentspace == 'none'):
       return get_vectorspace_matches(image_id, k, vectorspace)
@@ -73,7 +74,7 @@ def get_descriptors(image_id, k, vectorspace, latentspace):
       elif(vectorspace == 'fc'):
          return get_fc_desc_matches(image_id, k)'''
    else:
-      return get_latentspace_matches(image_id, k, vectorspace, latentspace)
+      return get_latentspace_matches(image_id, k, vectorspace, latentspace, useSimilarity=useSimilarity)
 
 def top_k_labels(distances, k):
    avg_labels = dict()
@@ -269,14 +270,20 @@ def get_vectorspace_matches(image_id, k, vectorspace, newImage=False):
       res_dict[li[1]+'-score'] = str(float("{:.4f}".format(li[0])))
    return res_dict   
 
-def get_latentspace_matches(image_id, k, vectorspace,latentspace, newImage=False):
+def get_latentspace_matches(image_id, k, vectorspace,latentspace, newImage=False, useSimilarity=False):
    if(latentspace in ['cpd']):
       json_file = open('descriptors/latent_descriptors/'+latentspace+'/'+vectorspace+'_'+latentspace+'.json', 'r')
       loaded_model_json = json_file.read()
       json_file.close()
       dictk = json.loads(loaded_model_json)
    else:
-      dictk = util.get_latent_semantics(k, vectorspace, latentspace)
+      if(useSimilarity):
+         json_file = open('descriptors/image_image/'+latentspace+'/'+vectorspace+'_'+latentspace+'.json', 'r')
+         loaded_model_json = json_file.read()
+         json_file.close()
+         dictk = json.loads(loaded_model_json)
+      else:
+         dictk = util.get_latent_semantics(k, vectorspace, latentspace)
    if(newImage):
       cur_desc = np.asarray(image_id)
    else:
