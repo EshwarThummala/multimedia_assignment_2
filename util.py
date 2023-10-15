@@ -27,7 +27,7 @@ def get_objectlatent_matrix(A, k, latentspace):
 
 
 def get_latent_semantics(k, vectorspace, latentspace):
-    json_file = open('descriptors\\'+vectorspace+'_desc_a2.json', 'r')
+    json_file = open('descriptors/'+vectorspace+'_desc_a2.json', 'r')
     loaded_model_json = json_file.read()
     json_file.close()
     data = json.loads(loaded_model_json)

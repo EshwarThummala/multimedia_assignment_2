@@ -24,6 +24,11 @@ def index():
          uploaded_image.save(image_path)
          dictk = image_process.get_newimage_matches(image_path, request.form['vectorspace'], request.form['latentspace'],int(request.form['k']))
          dictk['cur_image'] = image_path
+      elif(request.form['input_type'] == 'label'):
+         #check if provided label is valid or not
+         dictk = get_labels(request.form['image_id'], int(request.form['k']), request.form['vectorspace'] ,request.form['latentspace'])
+         result = json.loads(json.dumps(dictk))
+         return render_template('index.html', result = result)
       elif(-1 < int(request.form['image_id']) < 8677):
          dictk = get_descriptors(request.form['image_id'], int(request.form['k']), request.form['vectorspace'], request.form['latentspace'])
          # Add the current image's path to the result dictionary.
@@ -231,7 +236,7 @@ def get_fc_desc_matches(image_id, k):
     return res_dict
 '''
 def get_vectorspace_matches(image_id, k, vectorspace, newImage=False):
-   json_file = open('descriptors\\'+vectorspace+'_desc_a2.json', 'r')
+   json_file = open('descriptors/'+vectorspace+'_desc_a2.json', 'r')
    loaded_model_json = json_file.read()
    json_file.close()
    dictk = json.loads(loaded_model_json)
@@ -262,7 +267,7 @@ def get_vectorspace_matches(image_id, k, vectorspace, newImage=False):
 
 def get_latentspace_matches(image_id, k, vectorspace,latentspace, newImage=False):
    if(latentspace in ['cpd']):
-      json_file = open('descriptors\\latent_descriptors\\'+latentspace+'\\'+vectorspace+'_'+latentspace+'.json', 'r')
+      json_file = open('descriptors/latent_descriptors/'+latentspace+'/'+vectorspace+'_'+latentspace+'.json', 'r')
       loaded_model_json = json_file.read()
       json_file.close()
       dictk = json.loads(loaded_model_json)
@@ -290,6 +295,55 @@ def get_latentspace_matches(image_id, k, vectorspace,latentspace, newImage=False
       res_dict[li[1]] = 'static/torchvision_images/'+li[1]+'.jpg'
       res_dict[li[1]+'-score'] = str(float("{:.4f}".format(li[0])))
    return res_dict
+
+def get_labels(label, k ,vectorspace ,latentspace):
+   if(latentspace in ['cpd']):
+      json_file = open('descriptors/latent_descriptors/'+latentspace+'/'+vectorspace+'_'+latentspace+'.json', 'r')
+      loaded_model_json = json_file.read()
+      json_file.close()
+      dictk = json.loads(loaded_model_json)
+   else:
+      dictk = util.get_latent_semantics(k, vectorspace, latentspace)
+   predefined_labels = []
+   for key in dictk:
+      if dictk[key]['label'] not in predefined_labels:
+         predefined_labels.append(dictk[key]['label'])
+   if label.isnumeric() and int(label) > 100:
+      print('label not present')
+      fictk = dict()
+      fictk['input_type'] = 'label'
+      fictk['error'] = 'Given label is not present in the dataset please give a proper input'
+      return fictk
+   else:
+      model = {}
+      label_count = {}
+      for key in dictk:
+         if dictk[key]['label'] not in model:
+            model[dictk[key]['label']] = dictk[key]['feature-descriptor']
+            label_count[dictk[key]['label']] = 1
+         else:
+            x = model[dictk[key]['label']]
+            y = dictk[key]['feature-descriptor']
+            label_count[dictk[key]['label']] += 1
+            model[dictk[key]['label']] = (np.asarray(x) +np.asarray(y))
+      for key in model:
+         model[key] = model[key] / label_count[key]
+      print(model)
+      curr_label = np.asarray(model[predefined_labels[int(label)]])
+
+      distances = []
+      res_dict = {}
+      for key in model:
+         if key != label:
+            check_label = np.asarray(model[key])
+            dist =  euc(curr_label, check_label)
+            distances.append([key, dist])
+      distances.sort(key = lambda x: x[0])
+      print(distances)
+      res_dict['labels'] = distances[:k]
+      res_dict['input_type'] = 'label'
+
+      return res_dict
 
 if __name__ == "__main__":
     app.run(debug=True)
