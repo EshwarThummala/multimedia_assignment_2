@@ -17,6 +17,7 @@ def index():
     print(request.method)
     if(request.method == 'POST'):
       dictk = dict()
+      #dictk["Curr_query"] = "Given Query: "+ "Input type: " +request.form['input_type'] +"-"+ "Image-id/Label: "+request.form['image_id'] +"-"+ "K: "+request.form['k'] +"-"+ "Vector Space: "+request.form['vectorspace'] +"-"+ "Latent Space: " + request.form['latentspace']
       # Check if the provided image_id is within a valid range.
       if(request.form['input_type'] == 'image_file'):
          uploaded_image = request.files['image_id']
@@ -32,8 +33,7 @@ def index():
       elif(request.form['input_type'] == 'label'):
          #check if provided label is valid or not
          dictk = get_labels(request.form['image_id'], int(request.form['k']), request.form['vectorspace'] ,request.form['latentspace'])
-         result = json.loads(json.dumps(dictk))
-         return render_template('index.html', result = result)
+         
       elif(-1 < int(request.form['image_id']) < 8677):
          dictk = get_descriptors(request.form['image_id'], int(request.form['k']), request.form['vectorspace'], request.form['latentspace'])
          # Add the current image's path to the result dictionary.
@@ -41,6 +41,7 @@ def index():
       else:
          # Handle the case where the provided image is not found in the dataset.
          dictk['image_not_found'] = 'The provided image is is not found in the dataset'
+      dictk["Curr_query"] = "Given Query: "+ "Input type: " +request.form['input_type'] +"  "+ "Image-id/Label: "+request.form['image_id'] +"  "+ "K: "+request.form['k'] +"  "+ "Vector Space: "+request.form['vectorspace'] +"  "+ "Latent Space: " + request.form['latentspace']
       result = json.loads(json.dumps(dictk))
       return render_template('index.html', result = result)
     return render_template('index.html', result=None)

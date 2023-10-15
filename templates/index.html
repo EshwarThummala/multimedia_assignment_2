@@ -50,6 +50,7 @@
 <br>
 <!-- Displaying results based on the value of the result -->
 {% if result %}
+<h4>{{ result['Curr_query'] }}</h4>
 <!-- Displaying error message if image not found -->
     {% if 'input_type' in result.keys()%}
         
@@ -57,7 +58,8 @@
             <h1>Invalid Label Input</h1>
             
         {% else %}
-        <h1> Current Label: {{ result['curr_label']}}</h1>
+        
+        <h4> Current Label: {{ result['curr_label']}}</h4>
         <div class="container">
             <button class="btn btn-primary" id="toggleImageMatches" ><h4>Show Images</h4></button>
             <h1>-</h1>
@@ -66,7 +68,7 @@
         <div id="showimages">
             <div class="container">
                 {% for key,image_path in result.items() %}
-                    {% if key != 'curr_label' and 'score' not in key and key != 'cur_desc' and key != 'labels' and key != 'input_type'%}
+                    {% if key != 'Curr_query' and key != 'curr_label' and 'score' not in key and key != 'cur_desc' and key != 'labels' and key != 'input_type'%}
                         <div class="inline-div">
                             <img src="{{ image_path }}" alt="Some text"  style='border:2px solid #030303;border-radius:5px' width="200" height="180" />
                             <h3>Distance: {{ result[key+'-score'] }}</h3>
