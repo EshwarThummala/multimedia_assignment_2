@@ -24,6 +24,10 @@ def index():
          uploaded_image.save(image_path)
          dictk = image_process.get_newimage_matches(image_path, request.form['vectorspace'], request.form['latentspace'],int(request.form['k']))
          dictk['cur_image'] = image_path
+      elif (request.form['input_type'] == "label_label"):
+         dictk = get_label_label_matches(request.form['image_id'], int(request.form['k']), request.form['vectorspace'] ,request.form['latentspace'])
+         result = json.loads(json.dumps(dictk))
+         return render_template('index.html', result = result)
       elif(request.form['input_type'] == 'label'):
          #check if provided label is valid or not
          dictk = get_labels(request.form['image_id'], int(request.form['k']), request.form['vectorspace'] ,request.form['latentspace'])
@@ -334,15 +338,61 @@ def get_labels(label, k ,vectorspace ,latentspace):
       distances = []
       res_dict = {}
       for key in model:
-         if key != label:
+         if key != predefined_labels[int(label)]:
             check_label = np.asarray(model[key])
             dist =  euc(curr_label, check_label)
             distances.append([key, dist])
-      distances.sort(key = lambda x: x[0])
+      distances.sort(key = lambda x: x[1])
       print(distances)
       res_dict['labels'] = distances[:k]
       res_dict['input_type'] = 'label'
 
+      return res_dict
+
+def get_label_label_matches(label, k ,vectorspace ,latentspace):
+   file_path = "descriptors/label_label/label_label_"
+   feature_model = ""
+   if vectorspace == "color":
+      feature_model = "cm"
+   else:
+      feature_model = vectorspace
+   latent_model = ""
+   if latentspace == "nmf":
+      latent_model = "nnmf"
+   elif latentspace == "kmeans":
+      latent_model = "km"
+   else:
+      latent_model = latentspace
+   file_path += feature_model +"/label_label_"+feature_model+"_"+latent_model+"_10.json"
+   
+   json_file = open(file_path, 'r')
+   loaded_model_json = json_file.read()
+   json_file.close()
+   dictk = json.loads(loaded_model_json)
+
+   predefined_labels = list(dictk.keys())
+   
+
+   if label.isnumeric() and int(label) > 100:
+      print('label not present')
+      fictk = dict()
+      fictk['input_type'] = 'label'
+      fictk['error'] = 'Given label is not present in the dataset please give a proper input'
+      return fictk
+   else:
+      print(predefined_labels[int(label)])
+      curr_label = np.asarray(dictk[predefined_labels[int(label)]][:k])
+      distances = []
+      res_dict = {}
+      for key in dictk:
+         if key != predefined_labels[int(label)]:
+            check_label = np.asarray(dictk[key][:k])
+            dist =  euc(curr_label, check_label)
+            distances.append([key, dist])
+      distances.sort(key = lambda x: x[1])
+      print(distances)
+      res_dict['labels'] = distances[:k]
+      res_dict['input_type'] = 'label_label'
       return res_dict
 
 if __name__ == "__main__":
